@@ -59,6 +59,26 @@ organizers/
 __pycache__/
 *.py[cod]
 .venv/
+
+# PulsoXI private/licensed data and generated artifacts
+/private/
+/outputs/
+/models/
+/checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.parquet
+*.mov
+*.avi
+*atd*.txt
+*atd*.xml
+*smart_tagging*.xml
+*.npy
+*.npz
+.pytest_cache/
+.env
 venv/
 env/
 .DS_Store
