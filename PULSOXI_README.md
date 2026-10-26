@@ -1,4 +1,4 @@
-# PulsoXI Possession Engine — Phase 0 Starter Kit
+﻿# PulsoXI Possession Engine â€” Phase 0 Starter Kit
 
 This is a **public-code-only add-on** for the official Metrica Sports More Than a Hack 2027 repository. It does not contain licensed match assets, a trained model, or a scored PulsoXI submission.
 
@@ -68,3 +68,62 @@ python scripts/audit_atd.py --out outputs/local_audit/atd_audit.json
 ```
 
 The command fails if the gated files are absent. It writes only a concise JSON audit under the ignored `outputs/` directory and does not print raw tracking rows or coordinates.
+
+## Phase 2B first inference candidate
+
+`pulsoxi.inference` converts tracking features into interpretable H/A/D evidence. Relative team evidence is based on the difference between away and home minimum player-ball distances; reliable relative motion adds a small directional bonus. Missing-ball frames carry forward prior team evidence with decay and are not classified as dead solely because the ball is missing. Smart Tagging `SET PIECES` events provide bounded dead-ball support around event boundaries, while team tags provide only a small auxiliary bias. The existing configurable Viterbi decoder processes each official half independently and emits `X` outside graded periods.
+
+Run only on an authorized local machine containing the gated dataset:
+
+```powershell
+python scripts/run_inference.py --out outputs/local_inference/submission.csv --diagnostics outputs/local_inference/diagnostics.json
+python evaluation/validate_submission.py outputs/local_inference/submission.csv
+```
+
+This is an explainable initial candidate, not a trained model or a competition score. Parameters are engineering defaults and must not be tuned against the five-minute public ground truth.
+
+## Candidate V2: evidence-based transitions
+
+Candidate V1 remains the established fallback and default CLI candidate. The preferred experimental candidate is V3B+E2 (`v3be2`); it is not claimed to be more accurate without private ground truth. Candidate V2 reuses V1 H/A/D evidence but decodes H/A changes with accumulated log-likelihood evidence. A challenger must exceed a margin and accumulate evidence across frames; a sufficiently strong reliable margin may switch immediately. Missing-ball frames decay challenger evidence and hold the current state. Smart Tagging dead-ball evidence remains separate from H/A switching.
+
+Generate candidates locally into separate ignored paths:
+
+```powershell
+python scripts/run_inference.py --candidate v1 --out outputs/local_inference/submission_v1.csv --diagnostics outputs/local_inference/diagnostics_v1.json
+python scripts/run_inference.py --candidate v2 --out outputs/local_inference/submission_v2.csv --diagnostics outputs/local_inference/diagnostics_v2.json
+python evaluation/validate_submission.py outputs/local_inference/submission_v1.csv
+python evaluation/validate_submission.py outputs/local_inference/submission_v2.csv
+```
+
+V2 parameters are engineering defaults, not tuned on the public ground truth. Fewer predicted possessions would not by itself establish improvement.
+
+## Candidate V3: reliability-aware joint decoding
+
+Candidate V3 preserves the joint H/A/D Viterbi structure and V1 dead-ball transition costs. It varies only the H-to-A/A-to-H transition cost by bounded confidence: `opponent_cost(t) = base_opponent_cost + uncertainty_penalty * (1 - reliability_t)`. Reliability combines ball visibility, clipped team-distance margin, and the existing reliable relative-motion indicator. Missing or non-finite confidence becomes zero and never creates evidence. V3 is selectable with `--candidate v3`; V1 remains the default.
+
+## Phase 3A E2 emissions
+
+E2 is an optional football-aware emission model and does not alter E1. Its signed control score combines normalized nearest-player distance difference with a causal five-frame proximity mean (35% persistence weight). Valid nearest-player relative speed contributes up to 0.20, while ball speed attenuates evidence and speeds at or above 25 m/s are treated as discontinuities. Missing or invalid observations carry only a 0.97-decayed prior score and never create new evidence. E2 experiments use the V1-derived D/X mask so E1/E2 comparisons do not silently change dead-ball decisions.
+
+Run locally with `--candidate v1e2` or `--candidate v3be2`; generated outputs belong under ignored `outputs/local_inference/`.
+
+## Reproducing the frozen candidates
+
+Use Python 3.11 where available and the existing virtual environment. From the repository root:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-starter.txt
+```
+
+Place the authorised competition files under the local `data/tactical/` directory; they are intentionally excluded from Git. Generate the preferred candidate and validate it:
+
+```powershell
+python scripts/run_inference.py --candidate v3be2 --out outputs/local_inference/submission_v3be2.csv --diagnostics outputs/local_inference/diagnostics_v3be2.json
+python evaluation/validate_submission.py outputs/local_inference/submission_v3be2.csv
+```
+
+The fallback is `--candidate v1`. A successful run must produce 199,319 rows with frames 0 through 199,318. Generated submissions and diagnostics remain local under ignored `outputs/`. No private full-match ground truth or competition accuracy claim is included in this repository.
+
+The frozen runtime dependency set is recorded in `requirements-pulsoxi.txt`. `requirements-starter.txt` remains available for the organiser starter notebooks, but the PulsoXI inference command should use the frozen file.
