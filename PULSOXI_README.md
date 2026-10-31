@@ -1,47 +1,36 @@
-﻿# PulsoXI Possession Engine â€” Phase 0 Starter Kit
+# PulsoXI Possession Engine Ã¢â‚¬â€ Current Frozen Checkpoint
 
-This is a **public-code-only add-on** for the official Metrica Sports More Than a Hack 2027 repository. It does not contain licensed match assets, a trained model, or a scored PulsoXI submission.
+This repository contains the current PulsoXI source checkpoint for the possession engine. It preserves the official organiser framework while adding the frozen PulsoXI inference pipeline, V3B+E2 preferred candidate, V1 fallback, tests, diagnostics, and reproducibility documentation. Licensed match assets are not included.
 
-## Start here (Windows PowerShell)
+## Start here Ã¢â‚¬â€ current PulsoXI repository
 
-```powershell
-git clone https://github.com/metrica-sports/more-than-a-hack-2027.git
-cd more-than-a-hack-2027
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements-starter.txt
-python evaluation/run_evaluation.py
-```
-
-Extract **the contents of this kit** into your local `more-than-a-hack-2027/` folder. It creates `pulsoxi/`, `scripts/`, `tests/`, and a few documentation files. Do not replace or modify the official scorer. Keep the official README and `.gitignore` unchanged; **append** the contents of `PULSOXI_GITIGNORE_ADDITIONS.txt` to the official `.gitignore` before committing anything.
-
-```powershell
-python -m unittest discover -s tests -v
+```bash
+git clone https://github.com/musoye/pulsoxi-possession-engine.git
+cd pulsoxi-possession-engine
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-pulsoxi.txt
+python -m pip check
+python -m unittest discover -s tests -q
 python scripts/preflight.py
 ```
 
-The first command exercises **synthetic tests only**. The second executes the organiser's scorer on their published public samples and checks optional licensed data availability. Preflight results are not PulsoXI benchmark results.
+Do not clone the organiser repository for the current PulsoXI workflow. Use the PulsoXI repository above. The organiser files are already preserved in this repository.
 
-After you receive the organiser's separate licensed dataset email:
+The authorised dataset should be placed only in the local ignored `data/tactical/` directory described below. Do not replace the official scorer or upload the dataset.
 
-1. Extract it locally to `data/` (do not upload it into GitHub, ChatGPT or third-party hosted LLM services).
-2. Run `python scripts/preflight.py` again.
-3. Run `python starter/baseline.py` to reconstruct the official reference predictions, then `python evaluation/run_evaluation.py`.
-4. Develop a dedicated feature extraction stage with audited team/track-slot mapping; feed derived H/A/D probabilities into `pulsoxi.temporal.decode_full_match`.
-5. Generate a compliant submission only after these probabilities are derived from an actual algorithm. See `pulsoxi/submission.py`.
-6. Run `python evaluation/validate_submission.py your_output.csv` before submitting.
-
-## What this kit implements now
+## What this checkpoint implements now
 
 - Standalone Viterbi temporal decoder for **H / A / D** emission probabilities, with missing-evidence handling and separate inference per half.
 - Deterministic, 199,319-frame submission writer with **X** outside published graded half boundaries.
 - A preflight helper calling the official public evaluator and checking dataset file presence.
-- Synthetic unit tests and a report outline.
+- Audited tracking feature extraction using official team metadata.\n- E1 and football-aware E2 emissions, with V3B reliability-aware live H/A decoding and fixed V1 D/X masking.\n- Preferred `v3be2` inference command, V1 fallback, synthetic tests, diagnostics, and a technical-report outline.
 
-## What it does NOT implement yet
+## Current limitations
 
-- Reading your licensed ATD files; feature extraction; mapping each track slot to a team; live/dead probability estimator; ball recovery; model training; quantitative comparison of PulsoXI vs published baselines.
-- The transition penalties in `temporal.py` are **untuned engineering defaults**, not competition-optimal values. The 5-minute public labels cannot justify tuning them.
+- No private full-match ground truth or competition accuracy claim is included.
+- The full licensed dataset is required to run local inference.
+- V3B+E2 is the preferred frozen candidate; V1 remains the fallback.
 
 ## Competition constraints
 
@@ -127,3 +116,189 @@ python evaluation/validate_submission.py outputs/local_inference/submission_v3be
 The fallback is `--candidate v1`. A successful run must produce 199,319 rows with frames 0 through 199,318. Generated submissions and diagnostics remain local under ignored `outputs/`. No private full-match ground truth or competition accuracy claim is included in this repository.
 
 The frozen runtime dependency set is recorded in `requirements-pulsoxi.txt`. `requirements-starter.txt` remains available for the organiser starter notebooks, but the PulsoXI inference command should use the frozen file.
+
+## Complete setup and run guide
+
+This section describes the current frozen PulsoXI workflow from a fresh clone to a validated submission. It assumes that the user already has the authorised competition data on their local drive.
+
+### 1. Clone the repository
+
+```powershell
+git clone https://github.com/musoye/pulsoxi-possession-engine.git
+cd pulsoxi-possession-engine
+git checkout main
+```
+
+Do not place licensed tracking files in the Git repository history. The repository contains the code and public organiser files only.
+
+### 2. Connect an existing local dataset
+
+The inference loader looks for the competition assets through the repository's `data` directory. If the authorised dataset already exists elsewhere on the same computer, copy or link only the required files into the local, ignored data directory.
+
+Expected local layout:
+
+```text
+pulsoxi-possession-engine/
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ data/
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡   ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ tactical/
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡       ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ BAR-ATH_tactical_atd.xml
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡       ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ BAR-ATH_tactical_atd.txt
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡       ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ BAR-ATH_tactical_smart_tagging.xml
+ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡       ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ BAR-ATH_tactical_homography.csv
+```
+
+For example, if the authorised files are already in `D:\PulsoXI\licensed_data\tactical`, use PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force data\tactical
+Copy-Item D:\PulsoXI\licensed_data\tactical\BAR-ATH_tactical_atd.xml data\tactical\
+Copy-Item D:\PulsoXI\licensed_data\tactical\BAR-ATH_tactical_atd.txt data\tactical\
+Copy-Item D:\PulsoXI\licensed_data\tactical\BAR-ATH_tactical_smart_tagging.xml data\tactical\
+Copy-Item D:\PulsoXI\licensed_data\tactical\BAR-ATH_tactical_homography.csv data\tactical\
+```
+
+Alternatively, when permitted by the local operating system and dataset licence, create a directory junction or symbolic link to the authorised folder. Do not use a public cloud folder, public link, or third-party upload service.
+
+The files remain local because `.gitignore` excludes `data/*`. Never run `git add data`, and never send these files to hosted services.
+
+Check that the files exist without printing their contents:
+
+```powershell
+Get-ChildItem data\tactical -File | Select-Object Name,Length
+```
+
+The official file requirements are defined by `DATA.md`, `games.py`, and the organiser's current instructions. Do not rename files or invent substitute data files.
+
+### 3. Create and install the environment
+
+From the repository root:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements-pulsoxi.txt
+python -m pip check
+```
+
+The validated environment used Python 3.12.1. Use the existing `.venv` when it is already configured.
+
+### 4. Run the current preferred method
+
+The frozen preferred candidate is V3B+E2. It reads the local ATD and Smart Tagging files, extracts tracking features, creates E2 emissions, applies the V3B decoder, and writes a submission CSV under the ignored `outputs` directory.
+
+```powershell
+python scripts/run_inference.py `
+  --candidate v3be2 `
+  --out outputs\local_inference\submission_v3be2.csv `
+  --diagnostics outputs\local_inference\diagnostics_v3be2.json
+```
+
+The command does not modify the licensed source files. It creates only local generated outputs.
+
+### 5. Validate the generated submission
+
+```powershell
+python evaluation\validate_submission.py `
+  outputs\local_inference\submission_v3be2.csv
+```
+
+A valid result must contain:
+
+- 199,319 rows
+- Frame indices `0` through `199318`
+- Only `H`, `A`, `D`, and `X` labels
+- No `X` predictions inside graded halves
+
+### 6. Generate and validate the fallback
+
+V1 is the established fallback and can be generated independently:
+
+```powershell
+python scripts/run_inference.py `
+  --candidate v1 `
+  --out outputs\local_inference\submission_v1.csv `
+  --diagnostics outputs\local_inference\diagnostics_v1.json
+
+python evaluation\validate_submission.py `
+  outputs\local_inference\submission_v1.csv
+```
+
+Use V1 only as a fallback or comparison candidate. Do not select a candidate based only on possession count or smoother-looking output.
+
+### 7. Safe handoff for submission
+
+Before uploading through the official competition portal:
+
+```powershell
+Get-FileHash outputs\local_inference\submission_v3be2.csv -Algorithm SHA256
+```
+
+Record the candidate name, commit hash, Python version, dependency file, validation result, and submission SHA-256. Upload only the validated submission CSV requested by the organiser. Do not upload the tracking files, Smart Tagging files, videos, diagnostics, or source data.
+
+### 8. Troubleshooting
+
+- If the loader reports missing files, check `data\tactical` and compare filenames with `DATA.md`.
+- If `kloppy` or another dependency is missing, activate `.venv` and reinstall `requirements-pulsoxi.txt`.
+- If validation reports an incorrect row count or frame range, stop and investigate; do not manually edit the CSV.
+- If licensed data cannot be copied into the repository workspace, use the supported `--data-dir` option with an authorised local data root:
+
+```powershell
+python scripts/run_inference.py `
+  --data-dir D:\PulsoXI\licensed_data `
+  --candidate v3be2 `
+  --out outputs\local_inference\submission_v3be2.csv
+```
+
+The data directory must remain local and must not be a public or shared upload location.
+
+## Linux/macOS terminal commands
+
+Use these Bash commands instead of the PowerShell examples above:
+
+```bash
+git clone https://github.com/musoye/pulsoxi-possession-engine.git
+cd pulsoxi-possession-engine
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements-pulsoxi.txt
+python -m pip check
+```
+
+If the authorised data is already stored at `/mnt/pulsoxi/licensed_data`:
+
+```bash
+mkdir -p data/tactical
+cp /mnt/pulsoxi/licensed_data/tactical/BAR-ATH_tactical_atd.xml data/tactical/
+cp /mnt/pulsoxi/licensed_data/tactical/BAR-ATH_tactical_atd.txt data/tactical/
+cp /mnt/pulsoxi/licensed_data/tactical/BAR-ATH_tactical_smart_tagging.xml data/tactical/
+cp /mnt/pulsoxi/licensed_data/tactical/BAR-ATH_tactical_homography.csv data/tactical/
+```
+
+Or keep the dataset where it is and pass its path directly:
+
+```bash
+python scripts/run_inference.py \
+  --data-dir /mnt/pulsoxi/licensed_data \
+  --candidate v3be2 \
+  --out outputs/local_inference/submission_v3be2.csv \
+  --diagnostics outputs/local_inference/diagnostics_v3be2.json
+```
+
+Validate the generated submission:
+
+```bash
+python evaluation/validate_submission.py \
+  outputs/local_inference/submission_v3be2.csv
+```
+
+Expected output includes:
+
+```text
+199319 rows, frame 0..199318
+Valid
+```
+
+Do not commit or upload the licensed data, videos, generated diagnostics, or local prediction files.
