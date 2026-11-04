@@ -82,3 +82,9 @@ __pycache__/
 venv/
 env/
 .DS_Store
+
+# Public external validation datasets (local only)
+/external_data/
+
+# External public validation reports
+/external_validation_outputs/
