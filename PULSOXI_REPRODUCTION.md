@@ -2,6 +2,10 @@
 
 PulsoXI is a possession-control submission for the FC Barcelona More Than a Hack 2027 challenge. The selected frozen candidate is V3B+E2 with deterministic 1.5-second turnover stabilization; unstabilized V3B+E2 is the fallback.
 
+Team: PulsoXI
+
+Team members: AbdulShakur Bashir, Abraham Folorunso, Abdulrasheed Abdulsalam
+
 ## Install
 
 Clone the PulsoXI repository, use Python 3.12, create `.venv`, and install the pinned runtime:
